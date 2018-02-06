@@ -1,3 +1,4 @@
+scikit-image
 h5py
 keras
 tensorflow
