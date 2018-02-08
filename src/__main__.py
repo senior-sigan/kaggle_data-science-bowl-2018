@@ -9,10 +9,10 @@ from unet_model import UNetModel
 def build_params(argv):
     if len(argv) == 1 or argv[1] == 'local':
         print("local")
-        return config.local
+        return config.local.setup()
     elif argv[1] == 'devbox':
         print("Devbox")
-        return config.devbox
+        return config.devbox.setup()
 
 
 def main():
