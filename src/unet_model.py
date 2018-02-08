@@ -8,7 +8,7 @@ from keras.layers.core import Dropout, Lambda
 from keras.layers.merge import concatenate
 from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
-from tensorflow.python.ops.metrics_impl import mean_iou
+from metrics import mean_iou
 
 from params import Params
 

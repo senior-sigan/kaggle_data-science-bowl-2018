@@ -2,23 +2,17 @@
 import sys
 
 from data import make_train_generator
-from params import Params
+import config
 from unet_model import UNetModel
 
 
 def build_params(argv):
-    if argv[1] == 'local':
+    if len(argv) == 1 or argv[1] == 'local':
         print("local")
-        return Params(train_path='../input/stage1_train/',
-                      test_path='../input/stage1_test/',
-                      tensorboard_dir='/tmp/tensorflow/',
-                      chekpoints_path='../output/')
+        return config.local
     elif argv[1] == 'devbox':
         print("Devbox")
-        return Params(train_path='/home/ilya/Data/bowl2018/input/stage1_train/',
-                      test_path='/home/ilya/Data/bowl2018/input/stage1_test/',
-                      tensorboard_dir='/home/ilya/Data/bowl2018/tensorboard/',
-                      chekpoints_path='/home/ilya/Data/bowl2018/output/')
+        return config.devbox
 
 
 def main():
