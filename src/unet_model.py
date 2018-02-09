@@ -8,7 +8,7 @@ from keras.layers.core import Dropout, Lambda
 from keras.layers.merge import concatenate
 from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
-from metrics import mean_iou
+from metrics import mean_iou, dice_coef
 
 from params import Params
 
@@ -82,7 +82,7 @@ class UNetModel:
 
     def train(self, train_gen, validation_gen):
         self.model.summary()
-        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[mean_iou])
+        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[mean_iou, dice_coef])
 
         return self.model.fit_generator(
             generator=train_gen,
@@ -99,5 +99,5 @@ class UNetModel:
                 monitor='val_mean_iou',
                 verbose=1,
                 save_best_only=True,
-                mode='auto'
+                mode='max'
             )])
