@@ -14,7 +14,7 @@ class Params:
         self.chekpoints_path = os.path.join(chekpoints_path, "{}--{}".format(name, t))
         self.validation_size = 0.2
         self.batch_size = 32
-        self.epochs = 30
+        self.epochs = 100
         self.validation_steps_per_epoch = 670 * self.validation_size
         self.steps_per_epoch = 670 * (1 - self.validation_size)
         self.sample = sample

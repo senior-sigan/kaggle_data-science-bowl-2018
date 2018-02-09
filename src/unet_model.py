@@ -2,13 +2,13 @@
 import os
 
 from keras.callbacks import TensorBoard, ModelCheckpoint
-from keras.layers import Input
+from keras.layers import Input, BatchNormalization, Activation
 from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers.core import Dropout, Lambda
 from keras.layers.merge import concatenate
 from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
-from metrics import mean_iou, dice_coef
+from metrics import mean_iou, dice_coef, dice_coef_loss
 
 from params import Params
 
@@ -23,6 +23,7 @@ class UNetModel:
         IMG_WIDTH = None
         IMG_HEIGHT = None
         IMG_CHANNELS = 3
+        OUTPUT_MASK_CHANNELS = 2
 
         inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
         s = Lambda(lambda x: x / 255)(inputs)
@@ -75,14 +76,16 @@ class UNetModel:
         c9 = Dropout(0.1)(c9)
         c9 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same')(c9)
 
-        outputs = Conv2D(1, (1, 1), activation='sigmoid')(c9)
+        outputs = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(c9)
+        outputs = BatchNormalization(axis=3)(outputs)
+        outputs = Activation('sigmoid')(outputs)
 
         model = Model(name=self.name, inputs=[inputs], outputs=[outputs])
         return model
 
     def train(self, train_gen, validation_gen):
         self.model.summary()
-        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[mean_iou, dice_coef])
+        self.model.compile(optimizer='adam', loss=dice_coef_loss, metrics=[mean_iou, dice_coef])
 
         return self.model.fit_generator(
             generator=train_gen,

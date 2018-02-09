@@ -9,6 +9,7 @@ from skimage.io import imread
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+from skimage import feature
 
 from params import Params
 
@@ -99,7 +100,9 @@ def read_image(file_path, channels):
     if channels != 1:
         return imread(file_path)[:, :, :channels]
     else:
-        return np.expand_dims(imread(file_path), axis=-1)
+        img = imread(file_path)
+        edges = feature.canny(img, sigma=2)
+        return np.stack([img, edges], axis=2).astype(np.bool)
 
 
 def flatten_masks(files_paths):
@@ -115,7 +118,7 @@ def read_resize_images(files, height=256, width=256):
 
 
 def read_resize_masks(files, height=256, width=256):
-    imgs = np.zeros((len(files), height, width, 1), dtype=np.bool)
+    imgs = np.zeros((len(files), height, width, 2), dtype=np.bool)
     for i, file in tqdm(enumerate(files), total=len(files)):
         img = flatten_masks(file)
         imgs[i] = resize(img, (height, width), mode='constant', preserve_range=True)
