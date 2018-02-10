@@ -5,7 +5,8 @@ from datetime import datetime
 
 
 class Params:
-    def __init__(self, train_path, test_path, tensorboard_dir, chekpoints_path, submission_dir, sample=None):
+    def __init__(self, train_path, test_path, train_rles_path, tensorboard_dir, chekpoints_path, submission_dir,
+                 sample=None):
         self.model_path = None
         t = int(datetime.now().timestamp())
         name = 'unet'
@@ -22,12 +23,15 @@ class Params:
         self.cutoff = 0.5
         self.submission_dir = submission_dir
         self.submission_path = os.path.join(submission_dir, "submission--{}.csv".format(t))
+        self.train_rles_path = train_rles_path
 
-    def setup(self):
+    def setup_train(self):
         print(self.tensorboard_dir)
         os.makedirs(self.tensorboard_dir)
         print(self.chekpoints_path)
         os.makedirs(self.chekpoints_path)
+
+    def setup_submission(self):
         print(self.submission_dir)
         os.makedirs(self.submission_dir, exist_ok=True)
         return self

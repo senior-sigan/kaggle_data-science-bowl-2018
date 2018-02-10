@@ -9,10 +9,10 @@ def build_params(args):
     import config
     if args.local:
         print("local")
-        return config.local.setup()
+        return config.local
     elif args.devbox:
         print("Devbox")
-        return config.devbox.setup()
+        return config.devbox
 
 
 def train(params: Params):
@@ -48,8 +48,10 @@ def main():
     args = parser.parse_args()
     params = build_params(args)
     if args.train:
+        params.setup_train()
         train(params)
     elif args.predict:
+        params.setup_submission()
         params.model_path = args.model_path
         predict(params)
 

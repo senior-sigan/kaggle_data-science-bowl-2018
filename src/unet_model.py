@@ -8,8 +8,8 @@ from keras.layers.core import Dropout, Lambda
 from keras.layers.merge import concatenate
 from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
-from metrics import mean_iou, dice_coef, dice_coef_loss
 
+from metrics import mean_iou, dice_coef, dice_coef_loss
 from params import Params
 
 
@@ -23,7 +23,7 @@ class UNetModel:
         IMG_WIDTH = None
         IMG_HEIGHT = None
         IMG_CHANNELS = 3
-        OUTPUT_MASK_CHANNELS = 2
+        OUTPUT_MASK_CHANNELS = 1
 
         inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
         s = Lambda(lambda x: x / 255)(inputs)
