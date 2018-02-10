@@ -5,11 +5,11 @@ from random import sample
 
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
+from skimage import feature
 from skimage.io import imread
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-from skimage import feature
 
 from params import Params
 
@@ -56,8 +56,8 @@ def make_test_df(params: Params):
 
 
 def generator(X_train, X_test, Y_train, Y_test, batch_size):
-    X_train = read_resize_images(X_train)
-    X_test = read_resize_images(X_test)
+    X_train, _ = read_resize_images(X_train)
+    X_test, _ = read_resize_images(X_test)
     Y_train = read_resize_masks(Y_train)
     Y_test = read_resize_masks(Y_test)
 
@@ -109,12 +109,14 @@ def flatten_masks(files_paths):
     return np.sum(np.stack([read_image(file, 1) for file in files_paths], 0), 0)
 
 
-def read_resize_images(files, height=256, width=256):
+def read_resize_images(files, height=256, width=256) -> (np.ndarray, list):
     imgs = np.zeros((len(files), height, width, 3), dtype=np.uint8)
+    sizes = []
     for i, file in tqdm(enumerate(files), total=len(files)):
         img = read_image(file, 3)
+        sizes.append((img.shape[0], img.shape[1]))
         imgs[i] = resize(img, (height, width), mode='constant', preserve_range=True)
-    return imgs
+    return imgs, sizes
 
 
 def read_resize_masks(files, height=256, width=256):

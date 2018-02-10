@@ -19,7 +19,7 @@ class UNetModel:
         self.name = 'UNet'
         self.model = self._build_model()
 
-    def _build_model(self):
+    def _build_model(self) -> Model:
         IMG_WIDTH = None
         IMG_HEIGHT = None
         IMG_CHANNELS = 3
