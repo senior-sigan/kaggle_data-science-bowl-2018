@@ -99,7 +99,7 @@ def read_image(file_path, channels):
     if channels != 1:
         return imread(file_path)[:, :, :channels]
     else:
-        return imread(file_path)[:, :, 0].astype(np.bool)
+        return np.expand_dims(imread(file_path)[:, :].astype(np.bool), axis=-1)
 
 
 def flatten_masks(files_paths):

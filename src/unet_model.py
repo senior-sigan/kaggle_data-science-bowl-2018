@@ -9,7 +9,7 @@ from keras.layers.merge import concatenate
 from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
 
-from metrics import mean_iou, dice_coef, dice_coef_loss
+from metrics import mean_iou, dice_coef
 from params import Params
 
 
@@ -81,11 +81,11 @@ class UNetModel:
         outputs = Activation('sigmoid')(outputs)
 
         model = Model(name=self.name, inputs=[inputs], outputs=[outputs])
+        model.summary()
         return model
 
     def train(self, train_gen, validation_gen):
-        self.model.summary()
-        self.model.compile(optimizer='adam', loss=dice_coef_loss, metrics=[mean_iou, dice_coef])
+        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[mean_iou, dice_coef])
 
         return self.model.fit_generator(
             generator=train_gen,

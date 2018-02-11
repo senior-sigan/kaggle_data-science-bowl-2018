@@ -2,10 +2,11 @@
 
 import argparse
 
+from memory import get_model_memory_usage
 from params import Params
 
 
-def build_params(args):
+def build_params(args) -> Params:
     import config
     if args.local:
         print("local")
@@ -15,10 +16,20 @@ def build_params(args):
         return config.devbox
 
 
-def train(params: Params):
+def train_unet(params: Params):
     from unet_model import UNetModel
     from data import make_train_generator
     model = UNetModel(params)
+    print(get_model_memory_usage(params.batch_size, model.model))
+    train_gen, valid_gen = make_train_generator(params)
+    model.train(train_gen, valid_gen)
+
+
+def train_fusion(params: Params):
+    from fusionnet_model import FusionNetModel
+    from data import make_train_generator
+    model = FusionNetModel(params)
+    print(get_model_memory_usage(params.batch_size, model.model))
     train_gen, valid_gen = make_train_generator(params)
     model.train(train_gen, valid_gen)
 
@@ -35,21 +46,24 @@ def predict(params: Params):
 def main():
     parser = argparse.ArgumentParser(prog="Bowl 2018")
 
-    env_group = parser.add_argument_group("env")
+    env_group = parser.add_mutually_exclusive_group(required=True)
     env_group.add_argument("--local", action='store_true')
     env_group.add_argument("--devbox", action='store_true')
 
-    parser.add_argument("--train", action='store_true')
+    train_group = parser.add_argument_group("train")
+    train_group.add_argument("--train", action='store_true')
+    train_group.add_argument("--model_name", type=str)
 
     pred_group = parser.add_argument_group("prediction")
     pred_group.add_argument("--predict", action='store_true')
-    pred_group.add_argument("model_path", type=str)
+    pred_group.add_argument("--model_path", type=str)
 
     args = parser.parse_args()
     params = build_params(args)
+    train = {'unet': train_unet, 'fusionnet': train_fusion}
     if args.train:
-        params.setup_train()
-        train(params)
+        params.setup_train(args.model_name)
+        train[args.model_name](params)
     elif args.predict:
         params.setup_submission()
         params.model_path = args.model_path
