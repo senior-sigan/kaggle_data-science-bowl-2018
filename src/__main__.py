@@ -20,7 +20,7 @@ def train_unet(params: Params):
     from unet_model import UNetModel
     from data import make_train_generator
     model = UNetModel(params)
-    print(get_model_memory_usage(params.batch_size, model.model))
+    print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
     train_gen, valid_gen = make_train_generator(params)
     model.train(train_gen, valid_gen)
 
@@ -29,7 +29,7 @@ def train_fusion(params: Params):
     from fusionnet_model import FusionNetModel
     from data import make_train_generator
     model = FusionNetModel(params)
-    print(get_model_memory_usage(params.batch_size, model.model))
+    print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
     train_gen, valid_gen = make_train_generator(params)
     model.train(train_gen, valid_gen)
 

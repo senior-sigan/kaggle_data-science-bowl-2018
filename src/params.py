@@ -10,8 +10,8 @@ class Params:
         self.model_path = None
         self.train_path = train_path
         self.test_path = test_path
-        self.validation_size = 0.2
-        self.batch_size = 20
+        self.validation_size = 0.1
+        self.batch_size = 32
         self.epochs = 100
         self.validation_steps_per_epoch = 670 * self.validation_size
         self.steps_per_epoch = 670 * (1 - self.validation_size)

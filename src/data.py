@@ -5,11 +5,13 @@ from random import sample
 
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
+from skimage import feature
 from skimage.io import imread
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
+from parallel import parallel_process
 from params import Params
 
 
@@ -63,9 +65,10 @@ def generator(X_train, X_test, Y_train, Y_test, batch_size):
     data_gen_args = dict(horizontal_flip=True,
                          vertical_flip=True,
                          rotation_range=90.,
-                         width_shift_range=0.1,
-                         height_shift_range=0.1,
-                         zoom_range=0.1)
+                         width_shift_range=0.2,
+                         height_shift_range=0.2,
+                         zoom_range=0.2,
+                         fill_mode='reflect')
     image_datagen = ImageDataGenerator(**data_gen_args)
     mask_datagen = ImageDataGenerator(**data_gen_args)
     image_datagen.fit(X_train)
@@ -106,6 +109,27 @@ def flatten_masks(files_paths):
     return np.sum(np.stack([read_image(file, 1) for file in files_paths], 0), 0)
 
 
+def flatten_mask_without_edges(files_paths):
+    masks = []
+    for file in files_paths:
+        im = imread(file).astype(np.bool)
+        edge = feature.canny(imread(file), sigma=1).astype(np.bool)
+        img = (im & (edge != True))
+        masks.append(np.expand_dims(img, axis=-1))
+
+    return np.sum(np.stack(masks, 0), 0).astype(np.bool)
+
+
+def flatten_masks_edges(files_paths):
+    """
+    Generates a mask of ceil edges
+    :param files_paths:
+    :return:
+    """
+    edges = np.sum(np.stack([feature.canny(imread(file), sigma=1) for file in files_paths], 0), 0).astype(np.bool)
+    return np.expand_dims(edges, axis=-1)
+
+
 def read_resize_images(files, height=256, width=256) -> (np.ndarray, list):
     imgs = np.zeros((len(files), height, width, 3), dtype=np.uint8)
     sizes = []
@@ -118,7 +142,8 @@ def read_resize_images(files, height=256, width=256) -> (np.ndarray, list):
 
 def read_resize_masks(files, height=256, width=256):
     imgs = np.zeros((len(files), height, width, 1), dtype=np.bool)
-    for i, file in tqdm(enumerate(files), total=len(files)):
-        img = flatten_masks(file)
+
+    imgs_list = parallel_process(files, flatten_masks)
+    for i, img in enumerate(imgs_list):
         imgs[i] = resize(img, (height, width), mode='constant', preserve_range=True)
     return imgs
