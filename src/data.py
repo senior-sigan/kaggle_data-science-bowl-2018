@@ -5,6 +5,7 @@ from random import sample
 
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
+from scipy import ndimage
 from skimage import feature
 from skimage.io import imread
 from skimage.transform import resize
@@ -147,3 +148,17 @@ def read_resize_masks(files, height=256, width=256):
     for i, img in enumerate(imgs_list):
         imgs[i] = resize(img, (height, width), mode='constant', preserve_range=True)
     return imgs
+
+
+def to_angle(v, u, mask):
+    angle = np.angle(v + u * 1.0j, deg=True)
+    mask = np.logical_or(angle, mask > 0)
+    angle = angle + mask * 360  # подтягиваем наверх градусы, чтобы 0 - это был фон, а не 0 угол
+    return (angle / 540) * 255
+
+
+def flatten_masks_grad(masks):
+    imgs = [imread(mask) for mask in masks]
+    grads = [np.gradient(ndimage.distance_transform_edt(img)) for img in imgs]
+    angles = [to_angle(grad[1], grad[0], img) for grad, img in zip(grads, imgs)]
+    return np.expand_dims(np.sum(np.stack(angles, 0), 0), axis=-1) / 255.0
