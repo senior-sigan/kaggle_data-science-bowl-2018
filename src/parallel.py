@@ -48,5 +48,6 @@ def parallel_process(array, func, n_jobs=16, use_kwargs=False, front_num=3):
         try:
             out.append(future.result())
         except Exception as e:
-            out.append(e)
+            # out.append(e)
+            print(e)
     return front + out

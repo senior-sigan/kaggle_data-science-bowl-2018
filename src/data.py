@@ -4,10 +4,9 @@ from glob import glob
 from random import sample
 
 import numpy as np
-from keras.preprocessing.image import ImageDataGenerator
 from scipy import ndimage
 from skimage import feature
-from skimage.io import imread
+from skimage.io import imread, imsave
 from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
@@ -58,6 +57,7 @@ def make_test_df(params: Params):
 
 
 def generator(X_train, X_test, Y_train, Y_test, batch_size):
+    from keras.preprocessing.image import ImageDataGenerator
     X_train, _ = read_resize_images(X_train)
     X_test, _ = read_resize_images(X_test)
     Y_train = read_resize_masks(Y_train)
@@ -103,11 +103,11 @@ def read_image(file_path, channels):
     if channels != 1:
         return imread(file_path)[:, :, :channels]
     else:
-        return np.expand_dims(imread(file_path)[:, :].astype(np.bool), axis=-1)
+        return np.expand_dims(imread(file_path)[:, :], axis=-1)
 
 
 def flatten_masks(files_paths):
-    return np.sum(np.stack([read_image(file, 1) for file in files_paths], 0), 0)
+    return np.sum(np.stack([read_image(file, 1) for file in files_paths], 0), 0).astype(np.bool)
 
 
 def flatten_mask_without_edges(files_paths):
@@ -142,23 +142,42 @@ def read_resize_images(files, height=256, width=256) -> (np.ndarray, list):
 
 
 def read_resize_masks(files, height=256, width=256):
-    imgs = np.zeros((len(files), height, width, 1), dtype=np.bool)
+    return np.array([img for img, _ in read_resize_masks_abstract(files, flatten_masks, height, width)])
 
-    imgs_list = parallel_process(files, flatten_masks)
-    for i, img in enumerate(imgs_list):
-        imgs[i] = resize(img, (height, width), mode='constant', preserve_range=True)
-    return imgs
+
+def read_resize_masks_abstract(files, func, height=256, width=256):
+    for img, name in parallel_process(files, func):
+        yield resize(img, (height, width), mode='constant', preserve_range=True).astype(np.uint8), name
 
 
 def to_angle(v, u, mask):
     angle = np.angle(v + u * 1.0j, deg=True)
-    mask = np.logical_or(angle, mask > 0)
-    angle = angle + mask * 360  # подтягиваем наверх градусы, чтобы 0 - это был фон, а не 0 угол
-    return (angle / 540) * 255
+    m = np.logical_or(angle, mask > 0)
+    angle = angle + m * 360.0  # подтягиваем наверх градусы, чтобы 0 - это был фон, а не 0 угол
+    return (angle / 540.0) * 255.0
 
 
-def flatten_masks_grad(masks):
+def flatten_masks_grad(masks) -> (np.ndarray, str):
+    name = os.path.basename(os.path.dirname(os.path.dirname(masks[0])))
     imgs = [imread(mask) for mask in masks]
     grads = [np.gradient(ndimage.distance_transform_edt(img)) for img in imgs]
     angles = [to_angle(grad[1], grad[0], img) for grad, img in zip(grads, imgs)]
-    return np.expand_dims(np.sum(np.stack(angles, 0), 0), axis=-1) / 255.0
+    angle = np.sum(np.stack(angles, 0), 0)
+    angle[angle > 255] = 255
+    angle[angle < 0] = 0
+    return np.expand_dims(angle, axis=-1), name
+
+
+def save_depth_map(params):
+    print("Loading data")
+    X_train, Y_train = make_train_df(params)
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(X_train[0])))
+    print("Base dir: {}".format(base_dir))
+    for mask, name in parallel_process(Y_train, flatten_masks_grad):
+        dir_path = os.path.join(base_dir, name, 'depth_mask')
+        os.makedirs(dir_path, exist_ok=True)
+        mask_path = os.path.join(dir_path, name + '.png')
+
+        img = mask[:, :, 0].astype(dtype=np.uint8)
+        imsave(mask_path, img)
+        print("{} saved".format(mask_path))

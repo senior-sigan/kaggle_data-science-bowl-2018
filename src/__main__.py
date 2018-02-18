@@ -2,7 +2,6 @@
 
 import argparse
 
-from memory import get_model_memory_usage
 from params import Params
 
 
@@ -19,6 +18,7 @@ def build_params(args) -> Params:
 def train_unet(params: Params):
     from unet_model import UNetModel
     from data import make_train_generator
+    from memory import get_model_memory_usage
     model = UNetModel(params)
     print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
     train_gen, valid_gen = make_train_generator(params)
@@ -28,6 +28,7 @@ def train_unet(params: Params):
 def train_fusion(params: Params):
     from fusionnet_model import FusionNetModel
     from data import make_train_generator
+    from memory import get_model_memory_usage
     model = FusionNetModel(params)
     print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
     train_gen, valid_gen = make_train_generator(params)
@@ -41,6 +42,11 @@ def predict(params: Params):
     model = load_model(params.model_path,
                        {'mean_iou': mean_iou, 'dice_coef': dice_coef, 'dice_coef_loss': dice_coef_loss})
     make_submission(model, params)
+
+
+def generate_depth_masks(params: Params):
+    from data import save_depth_map
+    save_depth_map(params)
 
 
 def main():
@@ -58,6 +64,9 @@ def main():
     pred_group.add_argument("--predict", action='store_true')
     pred_group.add_argument("--model_path", type=str)
 
+    data_group = parser.add_argument_group("data")
+    data_group.add_argument("--depth_mask", action='store_true')
+
     args = parser.parse_args()
     params = build_params(args)
     train = {'unet': train_unet, 'fusionnet': train_fusion}
@@ -68,6 +77,10 @@ def main():
         params.setup_submission()
         params.model_path = args.model_path
         predict(params)
+    elif args.depth_mask:
+        generate_depth_masks(params)
+    else:
+        print("Nothing to do.")
 
 
 if __name__ == '__main__':
