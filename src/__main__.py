@@ -25,6 +25,16 @@ def train_unet(params: Params):
     model.train(train_gen, valid_gen)
 
 
+def train_watershed(params: Params):
+    from watershed_model import WatershedModel
+    from data import make_watershed_train_generator
+    from memory import get_model_memory_usage
+    model = WatershedModel(params)
+    print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
+    train_gen, valid_gen = make_watershed_train_generator(params)
+    model.train(train_gen, valid_gen)
+
+
 def train_fusion(params: Params):
     from fusionnet_model import FusionNetModel
     from data import make_train_generator
@@ -69,7 +79,7 @@ def main():
 
     args = parser.parse_args()
     params = build_params(args)
-    train = {'unet': train_unet, 'fusionnet': train_fusion}
+    train = {'unet': train_unet, 'fusionnet': train_fusion, 'watershed': train_watershed}
     if args.train:
         params.setup_train(args.model_name)
         train[args.model_name](params)
