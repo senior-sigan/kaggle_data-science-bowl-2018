@@ -18,38 +18,23 @@ class WatershedMasksReader(MasksReader):
 
     def _read_resize_masks_abstract(self, files: list):
         for img in parallel_process(files, self._process_masks):
-            yield resize(img, (self.height, self.width), mode='constant', preserve_range=True).astype(np.uint8)
+            yield resize(img, (self.height, self.width), mode='constant', preserve_range=True).astype(np.float32)
 
     def _flatten_masks(self, imgs):
         return np.sum(np.stack(imgs, 0), 0)
 
     def _read_images(self, files_path: list):
         for file in files_path:
-            yield imread(file)
+            yield imread(file, as_grey=True)
 
     def _gradient(self, imgs):
         for img in imgs:
-            yield np.gradient(ndimage.distance_transform_edt(img))
-
-    def _angle(self, gradients, imgs):
-        for grad, img in zip(gradients, imgs):
-            yield self._to_angle(grad[1], grad[0], img)
-
-    def _to_angle(self, v, u, mask):
-        angle = np.angle(v + u * 1.0j, deg=True)
-        m = np.logical_or(angle, mask > 0)
-        angle = angle + m * 360.0  # подтягиваем наверх градусы, чтобы 0 - это был фон, а не 0 угол
-        return (angle / 540.0) * 255.0
-
-    def _normalize(self, angle):
-        angle[angle > 255] = 255
-        angle[angle < 0] = 0
-        return angle
+            u, v = np.gradient(ndimage.distance_transform_edt(img))
+            yield np.stack([u, v], axis=2)
 
     def _process_masks(self, masks: list) -> np.ndarray:
-        imgs = list(self._read_images(masks))
+        imgs = self._read_images(masks)
         grads = self._gradient(imgs)
-        angles = self._angle(grads, imgs)
-        angle = self._normalize(self._flatten_masks(angles))
+        grads = self._flatten_masks(grads)
 
-        return np.expand_dims(angle, axis=-1)
+        return grads

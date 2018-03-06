@@ -2,7 +2,7 @@
 import os
 
 from keras.callbacks import TensorBoard, ModelCheckpoint
-from keras.layers import Input, BatchNormalization
+from keras.layers import Input, BatchNormalization, Activation
 from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers.core import Dropout, Lambda
 from keras.layers.merge import concatenate
@@ -23,7 +23,7 @@ class WatershedModel:
         IMG_WIDTH = None
         IMG_HEIGHT = None
         IMG_CHANNELS = 4
-        OUTPUT_MASK_CHANNELS = 1
+        OUTPUT_MASK_CHANNELS = 2
         f = 16
 
         inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
@@ -79,6 +79,7 @@ class WatershedModel:
 
         outputs = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(c9)
         outputs = BatchNormalization(axis=3)(outputs)
+        outputs = Activation('tanh')(outputs)
 
         model = Model(name=self.name, inputs=[inputs], outputs=[outputs])
         model.summary()

@@ -54,11 +54,6 @@ def predict(params: Params):
     make_submission(model, params)
 
 
-def generate_depth_masks(params: Params):
-    from data import save_depth_map
-    save_depth_map(params)
-
-
 def main():
     parser = argparse.ArgumentParser(prog="Bowl 2018")
 
@@ -87,8 +82,6 @@ def main():
         params.setup_submission()
         params.model_path = args.model_path
         predict(params)
-    elif args.depth_mask:
-        generate_depth_masks(params)
     else:
         print("Nothing to do.")
 
