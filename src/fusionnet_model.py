@@ -12,8 +12,8 @@ from keras.layers.core import Lambda
 from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
 
-from metrics import mean_iou, dice_coef
-from params import Params
+from src.metrics import mean_iou, dice_coef
+from src.params import Params
 
 
 class FusionNetModel:

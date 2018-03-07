@@ -1,4 +1,4 @@
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed, Future
 
 from tqdm import tqdm
 

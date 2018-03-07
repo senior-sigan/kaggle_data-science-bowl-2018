@@ -7,20 +7,21 @@ from keras.engine import Model
 from skimage.transform import resize
 from tqdm import tqdm
 
-from data import make_test_df, read_resize_images, make_train_df
-from params import Params
-from rle_encodign import prob_to_rles
+from src.data import make_test_df, make_train_df
+from src.params import Params
+from src.rle_encodign import prob_to_rles
 
 
 def make_submission(model: Model, params: Params):
-    tests_paths = make_test_df(params)
-    test_imgs, sizes = read_resize_images(tests_paths)
-    assert test_imgs.ndim == 4
-    masks = model.predict(test_imgs)
-
-    df = calc_rles(tests_paths, masks, sizes, params)
-    df[['ImageId', 'EncodedPixels']].to_csv(params.submission_path, index=False)
-    return df
+    # tests_paths = make_test_df(params)
+    # test_imgs, sizes = read_resize_images(tests_paths)
+    # assert test_imgs.ndim == 4
+    # masks = model.predict(test_imgs)
+    #
+    # df = calc_rles(tests_paths, masks, sizes, params)
+    # df[['ImageId', 'EncodedPixels']].to_csv(params.submission_path, index=False)
+    # return df
+    pass
 
 
 def calc_rles(file_paths: list, masks: list, sizes: list, params: Params):
@@ -43,15 +44,16 @@ def calc_rles(file_paths: list, masks: list, sizes: list, params: Params):
 
 
 def train_score(model: Model, params: Params):
-    X_train_paths, _ = make_train_df(params)
-    X_train, sizes = read_resize_images(X_train_paths)
-    assert X_train.ndim == 4
-    masks = model.predict(X_train, verbose=1)
-
-    predicted = calc_rles(X_train_paths, masks, sizes, params)
-    origin = pd.read_csv(params.train_rles_path)
-    score = submission_score(predicted, origin)
-    print("Train score: {}".format(score))
+    # X_train_paths, _ = make_train_df(params)
+    # X_train, sizes = read_resize_images(X_train_paths)
+    # assert X_train.ndim == 4
+    # masks = model.predict(X_train, verbose=1)
+    #
+    # predicted = calc_rles(X_train_paths, masks, sizes, params)
+    # origin = pd.read_csv(params.train_rles_path)
+    # score = submission_score(predicted, origin)
+    # print("Train score: {}".format(score))
+    pass
 
 
 def submission_score(predicted_labels: pd.DataFrame, train_labels: pd.DataFrame) -> float:

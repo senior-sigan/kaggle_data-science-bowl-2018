@@ -5,21 +5,21 @@ from glob import glob
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from data_loader.readers import MasksReader, ImagesReader
-from params import Params
+from src.data_loader.readers import MasksReader, ImagesReader
+from src.params import Params
 
 
 def make_train_generator(params: Params):
-    from data_loader.simple_images_reader import SimpleImagesReader
-    from data_loader.simple_masks_reader import SimpleMasksReader
+    from src.data_loader.simple_images_reader import SimpleImagesReader
+    from src.data_loader.simple_masks_reader import SimpleMasksReader
 
     return _make_train_generator(params, SimpleImagesReader(256, 256), SimpleMasksReader(256, 256))
 
 
 def make_watershed_train_generator(params: Params):
-    from data_loader.watershed_image_reader import WatershedImagesReader
-    from data_loader.watershed_masks_reader import WatershedMasksReader
-    return _make_train_generator(params, WatershedImagesReader(256, 256), WatershedMasksReader(256, 256))
+    from src.data_loader.watershed_image_reader import WatershedImagesReader
+    from src.data_loader.watershed_masks_reader import WatershedMasksReader
+    return _make_train_generator(params, WatershedImagesReader(256, 256), WatershedMasksReader(256, 256, params.n_jobs))
 
 
 def _make_train_generator(params: Params, images_reader: ImagesReader, masks_reader: MasksReader):
@@ -66,34 +66,35 @@ def make_test_df(params: Params):
 def generator(X_train, X_test, Y_train, Y_test, batch_size,
               images_reader: ImagesReader, masks_reader: MasksReader):
     from keras.preprocessing.image import ImageDataGenerator
+    seed = 42
 
-    X_train, _ = images_reader.read(X_train)
-    X_test, _ = images_reader.read(X_test)
     Y_train = masks_reader.read(Y_train)
     Y_test = masks_reader.read(Y_test)
+    X_train, _ = images_reader.read(X_train)
+    X_test, _ = images_reader.read(X_test)
 
     data_gen_args = dict(horizontal_flip=True,
                          vertical_flip=True,
                          rotation_range=90.,
                          width_shift_range=0.2,
                          height_shift_range=0.2,
-                         zoom_range=0.2,
+                         zoom_range=0.4,
                          fill_mode='reflect')
     image_datagen = ImageDataGenerator(**data_gen_args)
     mask_datagen = ImageDataGenerator(**data_gen_args)
-    image_datagen.fit(X_train)
-    mask_datagen.fit(Y_train)
-    image_generator = image_datagen.flow(X_train, batch_size=batch_size, seed=7)
-    mask_generator = mask_datagen.flow(Y_train, batch_size=batch_size, seed=7)
+    image_datagen.fit(X_train, seed=seed)
+    mask_datagen.fit(Y_train, seed=seed)
+    image_generator = image_datagen.flow(X_train, batch_size=batch_size, seed=seed)
+    mask_generator = mask_datagen.flow(Y_train, batch_size=batch_size, seed=seed)
     train_generator = zip(image_generator, mask_generator)
 
     val_gen_args = dict()
     image_datagen_val = ImageDataGenerator(**val_gen_args)
     mask_datagen_val = ImageDataGenerator(**val_gen_args)
-    image_datagen_val.fit(X_test)
-    mask_datagen_val.fit(Y_test)
-    image_generator_val = image_datagen_val.flow(X_test, batch_size=batch_size)
-    mask_generator_val = mask_datagen_val.flow(Y_test, batch_size=batch_size)
+    image_datagen_val.fit(X_test, seed=seed)
+    mask_datagen_val.fit(Y_test, seed=seed)
+    image_generator_val = image_datagen_val.flow(X_test, batch_size=batch_size, seed=seed)
+    mask_generator_val = mask_datagen_val.flow(Y_test, batch_size=batch_size, seed=seed)
     val_generator = zip(image_generator_val, mask_generator_val)
 
     return train_generator, val_generator

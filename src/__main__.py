@@ -2,11 +2,11 @@
 
 import argparse
 
-from params import Params
+from src.params import Params
 
 
 def build_params(args) -> Params:
-    import config
+    from src import config
     if args.local:
         print("local")
         return config.local
@@ -16,9 +16,9 @@ def build_params(args) -> Params:
 
 
 def train_unet(params: Params):
-    from unet_model import UNetModel
-    from data import make_train_generator
-    from memory import get_model_memory_usage
+    from src.unet_model import UNetModel
+    from src.data import make_train_generator
+    from src.memory import get_model_memory_usage
     model = UNetModel(params)
     print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
     train_gen, valid_gen = make_train_generator(params)
@@ -26,9 +26,9 @@ def train_unet(params: Params):
 
 
 def train_watershed(params: Params):
-    from watershed_model import WatershedModel
-    from data import make_watershed_train_generator
-    from memory import get_model_memory_usage
+    from src.watershed_model import WatershedModel
+    from src.data import make_watershed_train_generator
+    from src.memory import get_model_memory_usage
     model = WatershedModel(params)
     print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
     train_gen, valid_gen = make_watershed_train_generator(params)
@@ -36,9 +36,9 @@ def train_watershed(params: Params):
 
 
 def train_fusion(params: Params):
-    from fusionnet_model import FusionNetModel
-    from data import make_train_generator
-    from memory import get_model_memory_usage
+    from src.fusionnet_model import FusionNetModel
+    from src.data import make_train_generator
+    from src.memory import get_model_memory_usage
     model = FusionNetModel(params)
     print("Memmory {} GB".format(get_model_memory_usage(params.batch_size, model.model)))
     train_gen, valid_gen = make_train_generator(params)
@@ -47,8 +47,8 @@ def train_fusion(params: Params):
 
 def predict(params: Params):
     from keras.models import load_model
-    from submission import make_submission
-    from metrics import mean_iou, dice_coef_loss, dice_coef
+    from src.submission import make_submission
+    from src.metrics import mean_iou, dice_coef_loss, dice_coef
     model = load_model(params.model_path,
                        {'mean_iou': mean_iou, 'dice_coef': dice_coef, 'dice_coef_loss': dice_coef_loss})
     make_submission(model, params)

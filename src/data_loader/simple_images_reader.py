@@ -4,7 +4,7 @@ from skimage.io import imread
 from skimage.transform import resize
 from tqdm import tqdm
 
-from data_loader.readers import ImagesReader
+from src.data_loader.readers import ImagesReader
 
 
 class SimpleImagesReader(ImagesReader):

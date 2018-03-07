@@ -10,7 +10,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
 from keras.optimizers import Adam
 
-from params import Params
+from src.params import Params
 
 
 class WatershedModel:
@@ -79,14 +79,13 @@ class WatershedModel:
 
         outputs = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(c9)
         outputs = BatchNormalization(axis=3)(outputs)
-        outputs = Activation('tanh')(outputs)
 
         model = Model(name=self.name, inputs=[inputs], outputs=[outputs])
         model.summary()
         return model
 
     def train(self, train_gen, validation_gen):
-        self.model.compile(optimizer=Adam(lr=0.0015), loss='mean_squared_error', metrics=['mean_squared_error'])
+        self.model.compile(optimizer=Adam(lr=0.001), loss='mean_squared_error', metrics=['mean_squared_error'])
 
         return self.model.fit_generator(
             generator=train_gen,

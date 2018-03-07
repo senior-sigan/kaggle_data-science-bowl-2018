@@ -3,22 +3,24 @@ import numpy as np
 from scipy import ndimage
 from skimage.io import imread
 from skimage.transform import resize
+from tqdm import tqdm
 
-from data_loader.readers import MasksReader
-from parallel import parallel_process
+from src.data_loader.readers import MasksReader
+from src.parallel import parallel_process
 
 
 class WatershedMasksReader(MasksReader):
-    def __init__(self, height, width):
+    def __init__(self, height, width, n_jobs=16):
         self.height = height
         self.width = width
+        self.n_jobs = n_jobs
 
     def read(self, paths: list) -> np.ndarray:
         return np.array([img for img in self._read_resize_masks_abstract(paths)])
 
     def _read_resize_masks_abstract(self, files: list):
-        for img in parallel_process(files, self._process_masks):
-            yield resize(img, (self.height, self.width), mode='constant', preserve_range=True).astype(np.float32)
+        return parallel_process(files, self._process_masks, self.n_jobs)
+        # return [self._process_masks(file) for file in tqdm(files, total=len(files))]
 
     def _flatten_masks(self, imgs):
         return np.sum(np.stack(imgs, 0), 0)
@@ -36,5 +38,5 @@ class WatershedMasksReader(MasksReader):
         imgs = self._read_images(masks)
         grads = self._gradient(imgs)
         grads = self._flatten_masks(grads)
-
-        return grads
+        img = resize(grads, (self.height, self.width), mode='constant', preserve_range=True).astype(np.float32)
+        return img

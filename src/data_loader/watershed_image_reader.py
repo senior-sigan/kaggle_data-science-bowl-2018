@@ -7,8 +7,8 @@ from skimage.io import imread
 from skimage.transform import resize
 from tqdm import tqdm
 
-from data_loader.readers import ImagesReader
-from data_loader.simple_masks_reader import SimpleMasksReader
+from src.data_loader.readers import ImagesReader
+from src.data_loader.simple_masks_reader import SimpleMasksReader
 
 
 class WatershedImagesReader(ImagesReader):
@@ -20,14 +20,20 @@ class WatershedImagesReader(ImagesReader):
 
     def read(self, paths: list) -> (np.ndarray, list):
         imgs = np.zeros((len(paths), self.height, self.width, self.channels), dtype=np.uint8)
-        sizes = []
+        sizes = [None] * len(paths)
+
         for i, file in tqdm(enumerate(paths), total=len(paths)):
-            img = self.read_image(file)
-            sizes.append((img.shape[0], img.shape[1]))
-            img = resize(img, (self.height, self.width), mode='constant', preserve_range=True)
-            mask = self.read_mask(file)[0, :, :, :]
-            imgs[i] = np.concatenate((img, mask), axis=2)
+            imgs[i], sizes[i] = self._process(file)
+
         return imgs, sizes
+
+    def _process(self, file):
+        img = self.read_image(file)
+        size = (img.shape[0], img.shape[1])
+        img = resize(img, (self.height, self.width), mode='constant', preserve_range=True)
+        mask = self.read_mask(file)[0, :, :, :]
+        img = np.concatenate((img, mask), axis=2)
+        return img, size
 
     def read_mask(self, path):
         img_dir = os.path.dirname(os.path.dirname(path))

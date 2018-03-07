@@ -2,7 +2,7 @@
 """Threaded generator. https://github.com/Lasagne/Lasagne/issues/12#issuecomment-59494251"""
 
 
-def threaded_generator(generator, num_cached=50):
+def threaded_generator(generator, num_cached=1000):
     """Implements threaded generator to produce batches in background thread.
     # Arguments
         generator: an object exposing generator interface.
@@ -16,8 +16,8 @@ def threaded_generator(generator, num_cached=50):
 
     # define producer (putting items into queue)
     def producer():
-        for item in generator:
-            qu.put(item)
+        for it in generator:
+            qu.put(it)
         qu.put(sentinel)
 
     # start producer (in a background thread)

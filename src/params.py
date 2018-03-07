@@ -6,6 +6,7 @@ from datetime import datetime
 
 class Params:
     def __init__(self, train_path, test_path, train_rles_path, tensorboard_dir, chekpoints_path, submission_dir,
+                 n_jobs=16,
                  sample=None):
         self.model_path = None
         self.train_path = train_path
@@ -22,6 +23,7 @@ class Params:
         self.train_rles_path = train_rles_path
         self.tensorboard_dir = tensorboard_dir
         self.chekpoints_path = chekpoints_path
+        self.n_jobs = n_jobs
 
     def setup_train(self, name):
         t = int(datetime.now().timestamp())

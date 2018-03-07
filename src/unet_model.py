@@ -10,8 +10,8 @@ from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
 from keras.optimizers import Adam
 
-from metrics import mean_iou, dice_coef, dice_coef_loss
-from params import Params
+from src.metrics import mean_iou, dice_coef, dice_coef_loss
+from src.params import Params
 
 
 class UNetModel:
