@@ -10,6 +10,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
 from keras.optimizers import Adam
 
+from src.metrics import angle_loss
 from src.params import Params
 
 
@@ -85,7 +86,7 @@ class WatershedModel:
         return model
 
     def train(self, train_gen, validation_gen):
-        self.model.compile(optimizer=Adam(lr=0.001), loss='mean_squared_error', metrics=['mean_squared_error'])
+        self.model.compile(optimizer=Adam(lr=0.001), loss=angle_loss, metrics=['mean_squared_error', 'cosine_proximity', angle_loss])
 
         return self.model.fit_generator(
             generator=train_gen,
@@ -98,8 +99,8 @@ class WatershedModel:
                 batch_size=self.params.batch_size
             ), ModelCheckpoint(
                 os.path.join(self.params.chekpoints_path,
-                             "weights-improvement-{epoch:02d}-{val_mean_squared_error:.2f}.hdf5"),
-                monitor='val_mean_squared_error',
+                             "weights-improvement-{epoch:02d}-{val_angle_loss:.2f}.hdf5"),
+                monitor='val_angle_loss',
                 verbose=1,
                 save_best_only=False
             )])
