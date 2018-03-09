@@ -15,16 +15,16 @@ from src.params import Params
 
 
 class UNetModel:
-    def __init__(self, params: Params):
+    def __init__(self, params: Params, output_mask_channels=1):
         self.params = params
-        self.name = 'UNet'
+        self.name = 'UNet_{}'.format(output_mask_channels)
+        self.output_mask_channels = output_mask_channels
         self.model = self._build_model()
 
     def _build_model(self) -> Model:
         IMG_WIDTH = None
         IMG_HEIGHT = None
         IMG_CHANNELS = 3
-        OUTPUT_MASK_CHANNELS = 1
         f = 16
 
         inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
@@ -78,7 +78,7 @@ class UNetModel:
         c9 = Dropout(0.1)(c9)
         c9 = Conv2D(f, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same')(c9)
 
-        outputs = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(c9)
+        outputs = Conv2D(self.output_mask_channels, (1, 1))(c9)
         outputs = BatchNormalization(axis=3)(outputs)
         outputs = Activation('sigmoid')(outputs)
 

@@ -22,6 +22,12 @@ def make_watershed_train_generator(params: Params):
     return _make_train_generator(params, WatershedImagesReader(256, 256), WatershedMasksReader(256, 256, params.n_jobs))
 
 
+def make_edged_train_generator(params: Params):
+    from src.data_loader.simple_images_reader import SimpleImagesReader
+    from src.data_loader.edges_masks_read import EdgesMasksReader
+    return _make_train_generator(params, SimpleImagesReader(256, 256), EdgesMasksReader(256, 256, params.n_jobs))
+
+
 def _make_train_generator(params: Params, images_reader: ImagesReader, masks_reader: MasksReader):
     """
     Find, read and build train and validation generators

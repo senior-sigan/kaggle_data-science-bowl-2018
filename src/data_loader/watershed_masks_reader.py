@@ -3,7 +3,6 @@ import numpy as np
 from scipy import ndimage
 from skimage.io import imread
 from skimage.transform import resize
-from tqdm import tqdm
 
 from src.data_loader.readers import MasksReader
 from src.parallel import parallel_process
@@ -39,4 +38,4 @@ class WatershedMasksReader(MasksReader):
         grads = self._gradient(imgs)
         grads = self._flatten_masks(grads)
         img = resize(grads, (self.height, self.width), mode='constant', preserve_range=True).astype(np.float32)
-        return img
+        return (img + 1.0) / 2.0
