@@ -14,8 +14,9 @@ class Params:
         self.validation_size = 0.1
         self.batch_size = 32
         self.epochs = 100
-        self.validation_steps_per_epoch = 670 * self.validation_size
-        self.steps_per_epoch = 670 * (1 - self.validation_size)
+        steps = 670
+        self.validation_steps_per_epoch = steps * self.validation_size
+        self.steps_per_epoch = steps * (1 - self.validation_size)
         self.sample = sample
         self.cutoff = 0.5
         self.submission_dir = submission_dir

@@ -2,7 +2,7 @@
 import os
 
 from keras.callbacks import TensorBoard, ModelCheckpoint
-from keras.layers import Input, BatchNormalization, Activation
+from keras.layers import Input, BatchNormalization
 from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers.core import Dropout, Lambda
 from keras.layers.merge import concatenate
@@ -10,7 +10,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.models import Model
 from keras.optimizers import Adam
 
-from src.metrics import angle_loss
+from src.metrics import angle_loss as angle_loss_builder
 from src.params import Params
 
 
@@ -81,12 +81,15 @@ class WatershedModel:
         outputs = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(c9)
         outputs = BatchNormalization(axis=3)(outputs)
 
+        self.angle_loss = angle_loss_builder(s)
         model = Model(name=self.name, inputs=[inputs], outputs=[outputs])
         model.summary()
         return model
 
     def train(self, train_gen, validation_gen):
-        self.model.compile(optimizer=Adam(lr=0.001), loss=angle_loss, metrics=['mean_squared_error', 'cosine_proximity', angle_loss])
+        angle_loss = self.angle_loss
+        self.model.compile(optimizer=Adam(lr=1e-5), loss=angle_loss,
+                           metrics=['mean_squared_error', 'cosine_proximity'])
 
         return self.model.fit_generator(
             generator=train_gen,
@@ -99,8 +102,8 @@ class WatershedModel:
                 batch_size=self.params.batch_size
             ), ModelCheckpoint(
                 os.path.join(self.params.chekpoints_path,
-                             "weights-improvement-{epoch:02d}-{val_angle_loss:.2f}.hdf5"),
-                monitor='val_angle_loss',
+                             "weights-improvement-{epoch:02d}-{val_loss:.2f}.hdf5"),
+                monitor='val_loss',
                 verbose=1,
                 save_best_only=False
             )])

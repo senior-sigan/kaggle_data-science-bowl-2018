@@ -48,8 +48,18 @@ def cos_loss(y_true, y_pred):
     return tf.reshape(tf.acos(theta), [])
 
 
-def angle_loss(y_true, y_pred):
-    y_pred = tf.nn.l2_normalize(y_pred, 1) * 0.999999
-    y_true = tf.nn.l2_normalize(y_true, 1) * 0.999999
-    error_angles = tf.acos(tf.reduce_sum(y_pred * y_true, reduction_indices=[1], keep_dims=True))
-    return tf.reduce_sum((tf.abs(error_angles * error_angles)))
+def angle_loss(ss):
+    ss = ss[:, :, :, 3]
+    ss = tf.to_float(tf.reshape(ss, (-1, 1)))
+    output_channels = 2
+
+    def _loss(y_true, y_pred):
+        y_pred = tf.reshape(y_pred, (-1, output_channels))
+        y_true = tf.to_float(tf.reshape(y_true, (-1, output_channels)))
+
+        y_pred = tf.nn.l2_normalize(y_pred, axis=1) * 0.999999
+        y_true = tf.nn.l2_normalize(y_true, axis=1) * 0.999999
+        error_angles = tf.acos(tf.reduce_sum(y_pred * y_true, reduction_indices=[1], keepdims=True))
+        return tf.reduce_sum((tf.abs(error_angles * error_angles)) * ss)
+
+    return _loss

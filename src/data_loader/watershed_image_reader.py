@@ -31,7 +31,7 @@ class WatershedImagesReader(ImagesReader):
         img = self.read_image(file)
         size = (img.shape[0], img.shape[1])
         img = resize(img, (self.height, self.width), mode='constant', preserve_range=True)
-        mask = self.read_mask(file)[0, :, :, :]
+        mask = self.read_mask(file)[0, :, :, :] * 255
         img = np.concatenate((img, mask), axis=2)
         return img, size
 
